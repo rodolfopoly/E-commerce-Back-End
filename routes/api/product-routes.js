@@ -7,27 +7,26 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 router.get('/', async (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
-  try{
-  const productData = await Product.findAll({
-    attributes: ['id', 'product_name', 'price', 'stock'],
-    include: [{
-      model: Category,
-      attributes: ['category_name']
-    },
-    {
-      model: Tag,
-      attributes: 'tag_name'
-    }]
-  })
-  if (!productData) {
-    res.status(404).json({ message: 'No product found' });
-    return
+  try {
+    const productData = await Product.findAll({
+      attributes: ['id', 'product_name', 'price', 'stock'],
+      include: [{
+        model: Category,
+        attributes: ['category_name']
+      },
+      {
+        model: Tag,
+        attributes: 'tag_name'
+      }]
+    })
+    if (!productData) {
+      res.status(404).json({ message: 'No product found' });
+    }
+    res.json(productData);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
   }
-  res.json(productData);
-} catch(err){
-  console.log(err);
-  res.status(500).json(err);
-}
 });
 
 
@@ -35,30 +34,29 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
-  try{
-  const productData = await Product.findOne({
-    where: {
-      id: req.params.id
-    },
-    attributes: ['id', 'product_name', 'price', 'stock'],
-    include: [{
-      model: Category,
-      attributes: ['category_name']
-    },
-    {
-      model: Tag,
-      attributes: 'tag_name'
-    }]
-  })
-  if (!productData) {
-    res.status(404).json({ message: 'No product found' });
-    return
+  try {
+    const productData = await Product.findOne({
+      where: {
+        id: req.params.id
+      },
+      attributes: ['id', 'product_name', 'price', 'stock'],
+      include: [{
+        model: Category,
+        attributes: ['category_name']
+      },
+      {
+        model: Tag,
+        attributes: 'tag_name'
+      }]
+    })
+    if (!productData) {
+      res.status(404).json({ message: 'No product found' });
+    }
+    res.json(productData);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
   }
-  res.json(productData);
-} catch(err){
-  console.log(err);
-  res.status(500).json(err);
-}
 });
 
 // create new product
@@ -71,22 +69,23 @@ router.post('/', async (req, res) => {
       tagIds: [1, 2, 3, 4]
     }
   */
- try{
-  const productData = await Product.create(req.body)
-  // if there's product tags, we need to create pairings to bulk create in the ProductTag model
-  if (req.body.tagIds.length) {
+  try {
+    const productData = await Product.create(req.body)
+    if (!req.body.tagIds.length) {
+      // if no product tags, just respond
+      res.status(200).json(productData);
+    }
+
+    // if there's product tags, we need to create pairings to bulk create in the ProductTag model
     const productTag = req.body.tagIds.map((tag_id) => {
       return {
         product_id: product.id,
         tag_id,
       };
     });
-    return ProductTag.bulkCreate(productTag);
-  }
-  // if no product tags, just respond
-  res.status(200).json(productData);
-  (productTagIds) => res.status(200).json(productTagIds)
-  } catch(err){
+    const productTagIds = await ProductTag.bulkCreate(productTag);
+    res.status(200).json(productTagIds)
+  } catch (err) {
     console.log(err);
     res.status(500).json(err);
   }
@@ -95,59 +94,59 @@ router.post('/', async (req, res) => {
 // update product
 router.put('/:id', async (req, res) => {
   // update product data
-  try{
-   await Product.update(req.body, {
-    where: {
-      id: req.params.id,
-    },
-  })
-      // find all associated tags from ProductTag
-     const productTag = await ProductTag.findAll({ where: { product_id: req.params.id } });
+  try {
+    await Product.update(req.body, {
+      where: {
+        id: req.params.id,
+      },
+    })
+    // find all associated tags from ProductTag
+    const productTag = await ProductTag.findAll({ where: { product_id: req.params.id } });
 
-      // get list of current tag_ids
-      const productTagIds = productTag.map(({ tag_id }) => tag_id);
-      // create filtered list of new tag_ids
-      const newProductTags = req.body.tagIds
-        .filter((tag_id) => !productTagIds.includes(tag_id))
-        .map((tag_id) => {
-          return {
-            product_id: req.params.id,
-            tag_id,
-          };
-        });
-      // figure out which ones to remove
-      const productTagsToRemove = productTag
-        .filter(({ tag_id }) => !req.body.tagIds.includes(tag_id))
-        .map(({ id }) => id);
+    // get list of current tag_ids
+    const productTagIds = productTag.map(({ tag_id }) => tag_id);
+    // create filtered list of new tag_ids
+    const newProductTags = req.body.tagIds
+      .filter((tag_id) => !productTagIds.includes(tag_id))
+      .map((tag_id) => {
+        return {
+          product_id: req.params.id,
+          tag_id,
+        };
+      });
+    // figure out which ones to remove
+    const productTagsToRemove = productTag
+      .filter(({ tag_id }) => !req.body.tagIds.includes(tag_id))
+      .map(({ id }) => id);
 
-      // run both actions
-      const updatedProductTags = await Promise.all([
-        ProductTag.destroy({ where: { id: productTagsToRemove } }),
-        ProductTag.bulkCreate(newProductTags)
-      ]);
-     return res.json(updatedProductTags)
-  } catch(err) {
-      console.log(err);
-      res.status(400).json(err);
-    };
+    // run both actions
+    const updatedProductTags = await Promise.all([
+      ProductTag.destroy({ where: { id: productTagsToRemove } }),
+      ProductTag.bulkCreate(newProductTags)
+    ]);
+    return res.json(updatedProductTags)
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  };
 });
 
-router.delete('/:id',async (req, res) => {
+router.delete('/:id', async (req, res) => {
   // delete one product by its `id` value
-  try{
-    const productData = await Product.destroy({where:{ id: req.params.id}});
+  try {
+    const productData = await Product.destroy({ where: { id: req.params.id } });
 
-    if(!productData){
+    if (!productData) {
       res.status(404).json({ message: 'No product found' });
-        return;
-      }
-      res.json(productData);
-    
-    } catch(err){
-      console.log(err);
-      res.status(500).json(err);
+      return;
     }
-  });
+    res.json(productData);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
 
 
 module.exports = router;
