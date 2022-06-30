@@ -13,9 +13,8 @@ router.get('/', async (req, res) => {
         attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
       }
     })
-    if(!categoryData){
+    if (!categoryData) {
       res.status(404).json({ message: 'No category find' });
-      return
     }
     res.json(categoryData);
   } catch (err) {
@@ -28,17 +27,14 @@ router.get('/:id', async (req, res) => {
   // be sure to include its associated Products
   try {
     const categoryData = await Category.findOne({
-      where:{
-        id: req.params.id
-      },
+      where: { id: req.params.id },
       include: {
         model: Product,
         attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
       }
     })
-    if(!categoryData){
+    if (!categoryData) {
       res.status(404).json({ message: 'No category find' });
-      return
     }
     res.json(categoryData);
   } catch (err) {
@@ -53,9 +49,8 @@ router.post('/', async (req, res) => {
     const categoryData = await Category.create({
       category_name: req.body.category_name
     })
-    if(!categoryData){
+    if (!categoryData) {
       res.status(404).json({ message: 'err' });
-      return
     }
     res.json(categoryData);
   } catch (err) {
@@ -63,7 +58,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id',async (req, res) => {
+router.put('/:id', async (req, res) => {
   // update a category by its `id` value
   try {
     const categoryData = await Category.update(req.body, {
@@ -71,9 +66,8 @@ router.put('/:id',async (req, res) => {
         id: req.params.id
       }
     })
-    if(!categoryData){
+    if (!categoryData) {
       res.status(404).json({ message: 'No category find for this id' });
-      return
     }
     res.json(categoryData);
   } catch (err) {
@@ -85,13 +79,12 @@ router.delete('/:id', async (req, res) => {
   // delete a category by its `id` value
   try {
     const categoryData = await Category.destroy({
-      where:{
+      where: {
         id: req.params.id
       }
     })
-    if(!categoryData){
+    if (!categoryData) {
       res.status(404).json({ message: 'No category find for this id' });
-      return
     }
     res.json(categoryData);
   } catch (err) {

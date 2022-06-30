@@ -3,94 +3,88 @@ const { Tag, Product, ProductTag } = require('../../models');
 
 // The `/api/tags` endpoint
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   // find all tags
   // be sure to include its associated Product data
-  Tag.findAll({
-    include: {
-      model: Product,
-      attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
-    }
-  }).then(dbData => {
-    if(!dbData){
+  try {
+    const productData = await Tag.findAll({
+      include: {
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
+      }
+    })
+    if (!productData) {
       res.status(404).json({ message: 'No tag find' });
-      return
     }
-    res.json(dbData);
-  }).catch(err => {
+    res.json(productData);
+  } catch (err) {
     console.log(err);
-    res.status(500).json(err) 
-  })
+    res.status(500).json(err)
+  }
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   // find a single tag by its `id`
   // be sure to include its associated Product data
-  Tag.findOne({
-    where:{
-      id: req.params.id
-    },
-    include: {
-      model: Product,
-      attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
-    }
-  }).then(dbData => {
-    if(!dbData){
+  try {
+    const productData = await Tag.findOne({
+      where: { id: req.params.id },
+      include: {
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
+      }
+    })
+    if (!productData) {
       res.status(404).json({ message: 'No tag find for this id' });
-      return
     }
     res.json(dbData);
-  }).catch(err => {
+  } catch (err) {
     console.log(err);
     res.status(500).json(err)
-  });
+  };
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   // create a new tag
-  Tag.create({
-    tag_name: req.body.tag_name
-  }).then(dbData => res.json(dbData))
-  .catch(err => {
+  try {
+    const productData = await Tag.create({
+      tag_name: req.body.tag_name
+    }).
+      res.json(productData);
+  } catch (err) {
     console.log(err);
     res.status(500).json(err)
-  });
+  };
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   // update a tag's name by its `id` value
-  Category.update(req.body, {
-    where: {
-      id: req.params.id
-    }
-  }).then(dbData => {
-    if(!dbData){
+  try {
+    const productData = await Category.update(req.body, { where: { id: req.params.id } });
+    if (!productData) {
       res.status(404).json({ message: 'No tag find for this id' });
-      return
     }
-    res.json(dbData);
-  }).catch(err => {
+    res.json(productData);
+  } catch (err) {
     console.log(err);
-    res.status(500).json(err)
-  });
+    res.status(500).json(err);
+  }
 });
 
-router.delete('/:id', (req, res) => {
-  // delete on tag by its `id` value
-  Tag.destroy({
-    where:{
-      id: req.params.id
+router.delete('/:id', async (req, res) => {
+  // delete one product by its `id` value
+  try {
+    const productData = await Tag.destroy({ where: { id: req.params.id } });
+
+    if (!productData) {
+      res.status(404).json({ message: 'No product found' });
     }
-  }).then(dbData => {
-    if(!dbData){
-      res.status(404).json({ message: 'No category find for this id' });
-      return
-    }
-    res.json(dbData);
-  }).catch(err => {
+    res.json(productData);
+
+  } catch (err) {
     console.log(err);
-    res.status(500).json(err)
-  });
+    res.status(500).json(err);
+  }
 });
 
 module.exports = router;

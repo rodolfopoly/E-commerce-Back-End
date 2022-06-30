@@ -36,9 +36,7 @@ router.get('/:id', async (req, res) => {
   // be sure to include its associated Category and Tag data
   try {
     const productData = await Product.findOne({
-      where: {
-        id: req.params.id
-      },
+      where: { id: req.params.id },
       attributes: ['id', 'product_name', 'price', 'stock'],
       include: [{
         model: Category,
@@ -138,7 +136,6 @@ router.delete('/:id', async (req, res) => {
 
     if (!productData) {
       res.status(404).json({ message: 'No product found' });
-      return;
     }
     res.json(productData);
 
