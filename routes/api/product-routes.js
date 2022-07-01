@@ -70,21 +70,20 @@ router.post('/', async (req, res) => {
     }
   */
   try {
-    const productData = await Product.create(req.body)
-    if (!req.body.tagIds.length) {
-      // if no product tags, just respond
-      res.status(200).json(productData);
-    }
+    const productData = await Product.create(req.body);
 
     // if there's product tags, we need to create pairings to bulk create in the ProductTag model
-    const productTag = req.body.tagIds.map((tag_id) => {
-      return {
-        product_id: product.id,
-        tag_id,
-      };
-    });
-    const productTagIds = await ProductTag.bulkCreate(productTag);
-    res.status(200).json(productTagIds)
+    if (req.body.tagIds.length) {
+      const productTagArray = req.body.tagIds.map((tag_id) => { return {
+          product_id: productData.id,
+          tag_id,
+        };
+      });
+      const productTagIds = await ProductTag.bulkCreate(productTagArray);
+      res.status(200).json(productTagIds)
+    }
+    // if no product tags, just respond
+   else {res.status(200).json(productData);}
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
@@ -106,9 +105,7 @@ router.put('/:id', async (req, res) => {
     // get list of current tag_ids
     const productTagIds = productTag.map(({ tag_id }) => tag_id);
     // create filtered list of new tag_ids
-    const newProductTags = req.body.tagIds
-      .filter((tag_id) => !productTagIds.includes(tag_id))
-      .map((tag_id) => {
+    const newProductTags = req.body.tagsIds.filter((tag_id) => !productTagIds.includes(tag_id)).map((tag_id) => {
         return {
           product_id: req.params.id,
           tag_id,

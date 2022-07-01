@@ -69,7 +69,7 @@ router.put('/:id', async (req, res) => {
     if (!categoryData) {
       res.status(404).json({ message: 'No category find for this id' });
     }
-    res.json(categoryData);
+    res.json('category updated');
   } catch (err) {
     res.status(500).json(err);
   }
@@ -86,7 +86,7 @@ router.delete('/:id', async (req, res) => {
     if (!categoryData) {
       res.status(404).json({ message: 'No category find for this id' });
     }
-    res.json(categoryData);
+    res.json('category deleted');
   } catch (err) {
     res.status(500).json(err);
   }
